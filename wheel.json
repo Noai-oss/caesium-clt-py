@@ -1,0 +1,51 @@
+{
+  "name": "caesium-clt-py",
+  "version": "1.5.0",
+  "description": "Unofficial PyPI distribution of the original Caesium command-line binaries",
+  "homepage": "https://github.com/Lymphatus/caesium-clt",
+  "output-dir": "build/raw",
+  "binaries": {
+    "macosx_11_0_arm64": [
+      {
+        "name": "caesiumclt",
+        "path": "build/aarch64-apple-darwin/caesiumclt"
+      }
+    ],
+    "manylinux_2_17_aarch64": [
+      {
+        "name": "caesiumclt",
+        "path": "build/aarch64-unknown-linux-musl/caesiumclt"
+      }
+    ],
+    "musllinux_1_2_aarch64": [
+      {
+        "name": "caesiumclt",
+        "path": "build/aarch64-unknown-linux-musl/caesiumclt"
+      }
+    ],
+    "macosx_10_12_x86_64": [
+      {
+        "name": "caesiumclt",
+        "path": "build/x86_64-apple-darwin/caesiumclt"
+      }
+    ],
+    "win_amd64": [
+      {
+        "name": "caesiumclt",
+        "path": "build/x86_64-pc-windows-msvc/caesiumclt.exe"
+      }
+    ],
+    "manylinux_2_17_x86_64": [
+      {
+        "name": "caesiumclt",
+        "path": "build/x86_64-unknown-linux-musl/caesiumclt"
+      }
+    ],
+    "musllinux_1_2_x86_64": [
+      {
+        "name": "caesiumclt",
+        "path": "build/x86_64-unknown-linux-musl/caesiumclt"
+      }
+    ]
+  }
+}
