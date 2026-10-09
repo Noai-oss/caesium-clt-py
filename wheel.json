@@ -1,7 +1,7 @@
 {
   "name": "caesium-clt-py",
   "version": "1.5.0",
-  "description": "Unofficial PyPI distribution of the original Caesium command-line binaries",
+  "description": "Unofficial PyPI distribution of the original caesium-clt binaries",
   "homepage": "https://github.com/Lymphatus/caesium-clt",
   "output-dir": "build/raw",
   "binaries": {

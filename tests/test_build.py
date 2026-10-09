@@ -20,9 +20,9 @@ import build
 
 
 class BuildTests(unittest.TestCase):
-    def test_prepare_only_redownloads_and_maps_post_version(self):
+    def test_prepare_only_redownloads_and_preserves_upstream_version(self):
         target = "x86_64-pc-windows-msvc"
-        stem = f"caesiumclt-v1.5.0-{target}"
+        stem = f"caesiumclt-v1.5.0.post1-{target}"
         blob = io.BytesIO()
         with zipfile.ZipFile(blob, "w") as archive:
             archive.writestr(f"{stem}/caesiumclt.exe", b"original binary")
@@ -50,7 +50,8 @@ class BuildTests(unittest.TestCase):
                 build.main()
             self.assertEqual(fetch.call_count, 2)
             fetch.assert_called_with(
-                f"https://github.com/Lymphatus/caesium-clt/releases/download/v1.5.0/{stem}.zip"
+                "https://github.com/Lymphatus/caesium-clt/releases/download/"
+                f"v1.5.0.post1/{stem}.zip"
             )
             self.assertEqual(
                 (root / f"build/{target}/caesiumclt.exe").read_bytes(),
@@ -74,7 +75,7 @@ class BuildTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             config = json.loads((build.ROOT / "wheel.json").read_text())
-            config["version"] = "1.5.0.post1"
+            config["version"] = "1.5.0"
             (root / "wheel.json").write_text(json.dumps(config), encoding="utf-8")
             (root / "README.md").write_text("# Test\n", encoding="utf-8")
             output = root / "dist"
@@ -111,15 +112,17 @@ class BuildTests(unittest.TestCase):
                 self.assertIn("# Test\n", metadata)
                 self.assertIn("/tree/v1.5.0)", metadata)
 
-    def test_fetch_returns_bytes_and_reports_http_errors(self):
+    def test_fetch_returns_bytes_and_does_not_retry_http_errors(self):
         data = b"original upstream bytes"
         with patch("build.urllib.request.urlopen", return_value=io.BytesIO(data)):
             self.assertEqual(build.fetch("https://example.org/file.tar.gz"), data)
-        url = "https://example.org/missing.tar.gz"
+        url = "https://example.org/file.tar.gz"
         with (
             patch(
                 "build.urllib.request.urlopen",
-                side_effect=urllib.error.HTTPError(url, 404, "Not Found", {}, None),
+                side_effect=urllib.error.HTTPError(
+                    url, 503, "Service Unavailable", {}, None
+                ),
             ) as request,
             self.assertRaises(urllib.error.HTTPError),
         ):

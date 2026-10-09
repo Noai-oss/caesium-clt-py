@@ -7,8 +7,6 @@ import subprocess
 import sys
 import tarfile
 import tempfile
-import time
-import urllib.error
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -20,20 +18,10 @@ COMMAND = "caesiumclt"
 
 
 def fetch(url: str) -> bytes:
-    """Download without a local cache."""
+    """Download once without a local cache."""
     request = urllib.request.Request(url, headers={"User-Agent": "caesium-clt-py"})
-    for attempt in range(3):
-        try:
-            with urllib.request.urlopen(request, timeout=30) as response:
-                return response.read()
-        except urllib.error.HTTPError as error:
-            # Retry rate limits and server errors; fail on other HTTP errors.
-            if attempt == 2 or (error.code != 429 and error.code < 500):
-                raise
-        except (urllib.error.URLError, TimeoutError):
-            if attempt == 2:
-                raise
-        time.sleep(attempt + 1)
+    with urllib.request.urlopen(request, timeout=30) as response:
+        return response.read()
 
 
 def archive_files(data: bytes) -> dict[str, bytes]:
@@ -104,8 +92,7 @@ def main() -> None:
     }
     documents = {}
     upstream = config["homepage"].rstrip("/")
-    # Packaging revisions such as 1.5.0.post1 still use upstream v1.5.0.
-    tag = "v" + config["version"].split(".post", 1)[0]
+    tag = "v" + config["version"]
     for target in targets:
         documents[target] = prepare_target(upstream, tag, target, executables[target])
 
