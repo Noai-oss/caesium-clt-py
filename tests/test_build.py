@@ -64,7 +64,7 @@ class BuildTests(unittest.TestCase):
 
     def test_selected_target_builds_both_linux_wheels_with_one_download(self):
         target = "x86_64-unknown-linux-musl"
-        stem = f"caesiumclt-v1.5.0-{target}"
+        stem = f"caesiumclt-v1.10.0-{target}"
         blob = io.BytesIO()
         with tarfile.open(fileobj=blob, mode="w:gz") as archive:
             for name in ("caesiumclt", "LICENSE.md", "README.md"):
@@ -75,7 +75,7 @@ class BuildTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             config = json.loads((build.ROOT / "wheel.json").read_text())
-            config["version"] = "1.5.0"
+            config["version"] = "1.10.0"
             (root / "wheel.json").write_text(json.dumps(config), encoding="utf-8")
             (root / "README.md").write_text("# Test\n", encoding="utf-8")
             output = root / "dist"
@@ -96,7 +96,10 @@ class BuildTests(unittest.TestCase):
                 patch("build.fetch", return_value=blob.getvalue()) as fetch,
             ):
                 build.main()
-            fetch.assert_called_once()
+            fetch.assert_called_once_with(
+                "https://github.com/Lymphatus/caesium-clt/releases/download/"
+                f"v1.10.0/{stem}.tar.gz"
+            )
             self.assertEqual(
                 {wheel.name.rsplit("-", 1)[1] for wheel in output.glob("*.whl")},
                 {"manylinux_2_17_x86_64.whl", "musllinux_1_2_x86_64.whl"},
@@ -110,7 +113,8 @@ class BuildTests(unittest.TestCase):
                     )
                 ).decode()
                 self.assertIn("# Test\n", metadata)
-                self.assertIn("/tree/v1.5.0)", metadata)
+                self.assertIn("Version: 1.10.0\n", metadata)
+                self.assertIn("/tree/v1.10.0)", metadata)
 
     def test_fetch_returns_bytes_and_does_not_retry_http_errors(self):
         data = b"original upstream bytes"
@@ -118,11 +122,12 @@ class BuildTests(unittest.TestCase):
             self.assertEqual(build.fetch("https://example.org/file.tar.gz"), data)
         url = "https://example.org/file.tar.gz"
         with (
+            urllib.error.HTTPError(
+                url, 503, "Service Unavailable", {}, io.BytesIO()
+            ) as error,
             patch(
                 "build.urllib.request.urlopen",
-                side_effect=urllib.error.HTTPError(
-                    url, 503, "Service Unavailable", {}, None
-                ),
+                side_effect=error,
             ) as request,
             self.assertRaises(urllib.error.HTTPError),
         ):
