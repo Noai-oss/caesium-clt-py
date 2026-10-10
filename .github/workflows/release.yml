@@ -1,0 +1,62 @@
+name: Build and release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      needs_publish: ${{ steps.version.outputs.needs_publish }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: "3.12"
+          enable-cache: false
+      - run: uv sync --locked
+      - run: uvx ruff check .
+      - run: uvx ruff format --check .
+      - run: uv run --locked python -m unittest discover -s tests -v
+      - name: Compare wheel.json with PyPI
+        id: version
+        run: uv run --locked python check_version.py
+      - name: Build wheels
+        run: uv run --locked python build.py
+      - name: Check wheel descriptions
+        run: uvx twine check dist/*.whl
+      - name: Smoke-test the Linux wheel
+        run: uv run --no-project --isolated --with dist/*-manylinux_2_17_x86_64.whl caesiumclt --version
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheels
+          path: dist/*.whl
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: needs.build.outputs.needs_publish == 'true'
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: wheels
+          path: dist
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          enable-cache: false
+      - run: uv publish --trusted-publishing always dist/*.whl

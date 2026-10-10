@@ -1,0 +1,43 @@
+name: Update upstream version
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: "3.12"
+          enable-cache: false
+      - name: Update wheel.json from upstream
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: uv run --locked python update_version.py
+      - uses: peter-evans/create-pull-request@v8
+        with:
+          branch: update-upstream-version
+          add-paths: wheel.json
+          commit-message: Update upstream caesium-clt version
+          title: Update upstream caesium-clt version
+          body: |
+            Update `wheel.json` to the latest upstream release.
+
+            After review and merge, the release workflow compares the configured version with PyPI before publishing.
