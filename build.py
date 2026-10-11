@@ -62,6 +62,11 @@ def prepare_target(upstream: str, tag: str, target: str, executable: Path) -> Pa
 
 
 def main() -> None:
+    """Prepare selected upstream targets and optionally build finished wheels.
+
+    Read versions and platforms from wheel.json, then use CLI options to select
+    targets, skip packaging, or choose the output directory.
+    """
     config_path = ROOT / "wheel.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
     # Each platform has one executable at build/<upstream-target>/<filename>.
