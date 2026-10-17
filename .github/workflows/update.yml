@@ -38,6 +38,7 @@ jobs:
           base: main
           branch: update-upstream-version
           add-paths: wheel.json
+          reviewers: Noai-oss
           commit-message: Update upstream caesium-clt to ${{ steps.update.outputs.version }}
           title: Update caesium-clt ${{ steps.update.outputs.previous_version }} → ${{ steps.update.outputs.version }}
           body-path: ${{ runner.temp }}/update-pr.md
