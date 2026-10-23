@@ -63,7 +63,7 @@ The fixed PNG fixture is 32×24 pixels. Its compressed output must fully decode 
 
 | Workflow | Trigger | Behavior |
 | --- | --- | --- |
-| [Update](.github/workflows/update.yml) | Daily 06:17 UTC / manual | Check out main, preflight the newer release's assets, and maintain a version-only PR on `update-upstream-version` |
+| [Update](.github/workflows/update.yml) | Friday 06:17 UTC / manual | Check out main, preflight the newer release's assets, and maintain a version-only PR on `update-upstream-version` |
 | [CI](.github/workflows/ci.yml) | PR / main push / reusable call | Build all seven wheels, run Twine, then install and exercise the same artifact on three platforms |
 | [Release](.github/workflows/release.yml) | `v*` tag push / manual | Validate the selected commit, call CI, and optionally upload its exact artifact |
 
